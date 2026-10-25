@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use EPI-ITS, please cite it as below."
+title: "EPI-ITS: browser-based interrupted time series analysis with segmented regression and counterfactual forecasting"
+type: software
+authors:
+  - family-names: "Fernández-Guzmán"
+    given-names: "Daniel"
+version: "2026.10.25"
+date-released: "2026-10-25"
+license: CC-BY-NC-ND-4.0
+repository-code: "https://github.com/Danielferguz/EPI-Interrumped-Time-Series-Analysis"
+url: "https://danielferguz.github.io/EPI-Interrumped-Time-Series-Analysis/"
+keywords:
+  - interrupted time series
+  - segmented regression
+  - forecasting
+  - epidemiology

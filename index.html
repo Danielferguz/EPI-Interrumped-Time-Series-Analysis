@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EPI-ITS</title>
+<meta name="description" content="EPI-ITS (EPI-LAB): análisis de series temporales interrumpidas en el navegador. Regresión segmentada con una a tres interrupciones, periodo de transición, estacionalidad, autocorrelación, datos agregados e individuales, pronóstico del contrafactual (tendencia, Holt-Winters, ARIMA) y figuras listas para publicar.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/style.css?v=2026.10.25-1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 46 40" aria-hidden="true"><rect x="2" y="16" width="4" height="22" rx="1" fill="#4D4D4D"/><rect x="9" y="12" width="4" height="26" rx="1" fill="#4D4D4D"/><rect x="16" y="9" width="4" height="29" rx="1" fill="#5BA7B8"/><rect x="23" y="22" width="4" height="16" rx="1" fill="#5BA7B8"/><rect x="30" y="28" width="4" height="10" rx="1" fill="#4D4D4D"/><path d="M8 4 C20 4 22 18 28 22 S38 30 42 28" fill="none" stroke="#4D4D4D" stroke-width="1.6"/><circle cx="8" cy="5" r="4" fill="#8B2E3B"/><circle cx="28" cy="21" r="3" fill="#4D4D4D"/><circle cx="42" cy="28" r="3" fill="#5BA7B8"/></svg>
+    <div><h1><span class="epi">EPI</span><span class="data">-ITS</span></h1><p>Un módulo de <b>EPI-LAB</b> · Series temporales interrumpidas</p></div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="guia" class="active"><span class="n">1</span>Guía y ejemplos</button>
+    <button role="tab" data-tab="datos"><span class="n">2</span>Datos</button>
+    <button role="tab" data-tab="diseno"><span class="n">3</span>Interrupciones y modelo</button>
+    <button role="tab" data-tab="resultados"><span class="n">4</span>Regresión segmentada</button>
+    <button role="tab" data-tab="pronostico"><span class="n">5</span>Pronóstico</button>
+    <button role="tab" data-tab="grupos"><span class="n">6</span>Grupos y paneles</button>
+    <button role="tab" data-tab="reporte"><span class="n">7</span>Reporte</button>
+    <button role="tab" data-tab="ayuda"><span class="n">?</span>Ayuda</button>
+  </nav>
+</header>
+<main>
+<section id="tab-guia" class="tab active">
+  <div class="card prose" id="guide"></div>
+  <div class="card"><h2>Ejemplos (datos simulados)</h2><p class="sub">Cada ejemplo carga los datos, define las interrupciones y deja el modelo listo. Ninguno contiene datos reales.</p><div class="examples" id="examples"></div></div>
+</section>
+
+<section id="tab-datos" class="tab">
+  <div class="card">
+    <h2>Cargar los datos</h2>
+    <div class="howto"><div><b>Qué se hace</b>Se lee una tabla CSV o Excel con una fila por periodo (datos agregados o poblacionales) o una fila por observación de cada persona (datos individuales).</div><div><b>Para qué</b>La serie debe tener el mismo intervalo (mensual, trimestral…) y suficientes periodos antes y después de cada interrupción: idealmente ≥ 12 antes y ≥ 6 después.</div><div><b>Datos</b>Todo se calcula en su navegador; no se envía nada a ningún servidor.</div></div>
+    <div class="drop" id="drop"><input type="file" id="file" accept=".csv,.txt,.tsv,.xlsx,.xls"><label for="file"><b>Elija un archivo</b> o arrástrelo aquí</label></div>
+    <p class="sub" id="load-msg"></p>
+  </div>
+  <div class="card has-data" hidden>
+    <h2>Qué contiene cada columna</h2>
+    <div class="row gap wrap seg"><button class="ghost" data-dt="agg">Datos agregados o poblacionales (una fila por periodo y grupo)</button><button class="ghost" data-dt="ind">Datos individuales (una fila por persona y medición)</button></div>
+    <div class="form" id="map-form"></div>
+    <p class="sub" id="map-note"></p>
+    <div id="d-plot"></div>
+    <div class="tablewrap" id="d-prev"></div>
+    <div class="stepnav"><span></span><button class="primary" data-go="diseno">Siguiente: interrupciones y modelo →</button></div>
+  </div>
+</section>
+
+<section id="tab-diseno" class="tab">
+  <div class="card need-data"><p class="muted">Cargue primero los datos (paso 2) o elija un ejemplo en el paso 1.</p></div>
+  <div class="card has-data" hidden>
+    <h2>Interrupciones (hasta 4)</h2>
+    <div class="howto"><div><b>Qué se hace</b>Se marca el primer periodo posterior a cada intervención o evento (inicio de un fármaco, una norma, un confinamiento). Con varias interrupciones, cada efecto se mide frente a continuar la tendencia del tramo anterior.</div><div><b>Para qué</b>Estimar cuánto cambió el nivel y la pendiente de la serie, y qué habría pasado sin la interrupción.</div><div><b>Cómo interpretar</b>«Nivel» = salto inmediato; «pendiente» = cambio de la tendencia por periodo. El periodo de transición excluye los periodos en que el efecto aún no es pleno.</div></div>
+    <div id="brk-list"></div>
+    <div class="row gap wrap mt"><button class="ghost" id="brk-add">+ Añadir interrupción</button></div>
+    <div class="form mt"><label>Periodos de transición tras cada interrupción (excluidos del ajuste)<input type="number" id="dz-lag" min="0" step="1" value="0"></label></div>
+  </div>
+  <div class="card has-data" hidden>
+    <h2>Modelo</h2>
+    <div class="form" id="dz-form"></div>
+    <div class="explain" id="dz-explain"></div>
+    <div class="stepnav"><button class="ghost" data-go="datos">← Datos</button><button class="primary" id="dz-run">Ajustar la regresión segmentada →</button></div>
+  </div>
+</section>
+
+<section id="tab-resultados" class="tab">
+  <div class="card need-data"><p class="muted">Cargue primero los datos y defina las interrupciones.</p></div>
+  <div id="r-ctl" class="card has-data" hidden></div>
+  <div id="r-out"></div>
+</section>
+
+<section id="tab-pronostico" class="tab">
+  <div class="card need-data"><p class="muted">Cargue primero los datos y defina las interrupciones.</p></div>
+  <div class="card has-data" hidden>
+    <h2>Pronóstico del contrafactual</h2>
+    <div class="howto"><div><b>Qué se hace</b>Con la serie anterior a cada interrupción se pronostica qué habría ocurrido sin ella y se compara con lo observado.</div><div><b>Para qué</b>Es un segundo estimador del efecto que no asume una tendencia recta: tendencia + estacionalidad, suavizado exponencial (Holt-Winters) o ARIMA. Si varios métodos coinciden, la conclusión es más sólida.</div><div><b>Cómo interpretar</b>La precisión de cada método se mide dentro del periodo previo (validación de origen móvil): prefiera el de menor RMSE y buena cobertura del intervalo.</div></div>
+    <div class="form" id="fc-form"></div>
+    <div class="row gap mt wrap"><button class="primary" id="fc-run">Pronosticar y comparar métodos</button><span class="muted" id="fc-msg"></span></div>
+  </div>
+  <div id="fc-out"></div>
+</section>
+
+<section id="tab-grupos" class="tab">
+  <div class="card need-data"><p class="muted">Cargue datos con una columna de grupo (p. ej., región) para ver paneles y comparar efectos.</p></div>
+  <div class="card has-data" hidden id="g-ctl"></div>
+  <div id="g-out"></div>
+</section>
+
+<section id="tab-reporte" class="tab">
+  <div class="card need-data"><p class="muted">Ajuste primero un modelo (paso 4).</p></div>
+  <div id="rep-out"></div>
+  <div class="card">
+    <h2>Formato de figuras</h2>
+    <p class="sub">Se aplica a las descargas SVG/PNG/TIFF de todas las figuras (texto en inglés para publicación).</p>
+    <div class="form">
+      <label>Ancho <select id="fig-width"><option value="single">1 columna (85 mm)</option><option value="onehalf">1,5 columnas (120 mm)</option><option value="double" selected>2 columnas (174 mm)</option><option value="custom">Personalizado</option></select></label>
+      <label>Ancho personalizado (mm) <input id="fig-mm" type="number" value="174"></label>
+      <label>Resolución <select id="fig-dpi"><option>300</option><option selected>600</option><option>1200</option></select></label>
+      <label>Fuente <select id="fig-font"><option value="arial">Arial</option><option value="helvetica">Helvetica</option><option value="times">Times New Roman</option></select></label>
+    </div>
+  </div>
+</section>
+
+<section id="tab-ayuda" class="tab"><div class="card prose" id="help"></div></section>
+</main>
+<footer class="foot">EPI-ITS · un módulo de EPI-LAB · © Daniel Fernández-Guzmán · CC BY-NC-ND 4.0 · Los cálculos se realizan en su navegador; ningún dato se envía a servidores. · v2026.10.25-1</footer>
+<script type="module" src="js/app.js?v=2026.10.25-1"></script>
+</body>
+</html>
