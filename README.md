@@ -33,3 +33,8 @@ El script de Python que descarga la herramienta reproduce exactamente los efecto
 Bernal JL, Cummins S, Gasparrini A. *Int J Epidemiol* 2017;46:348–355 · Kontopantelis E et al. *BMJ* 2015;350:h2750 · Wagner AK et al. *J Clin Pharm Ther* 2002;27:299–309 · Schaffer AL et al. *BMC Med Res Methodol* 2021;21:58 · Turner SL et al. *BMC Med Res Methodol* 2021;21:134 · Newey WK, West KD. *Econometrica* 1987;55:703–708 · Hyndman RJ, Athanasopoulos G. *Forecasting: Principles and Practice*, 3.ª ed.
 
 Los datos de los ejemplos son simulados. © Daniel Fernández-Guzmán · CC BY-NC-ND 4.0.
+
+## Acceso
+La herramienta pide **usuario y contraseña** al abrirla (`auth.js`). Solo se guarda una huella PBKDF2-SHA256 del par usuario + contraseña, no la contraseña. Es una barrera para visitantes casuales: el código sigue siendo visible para quien sepa abrir las herramientas del navegador. Para proteger de verdad se necesita control de acceso en el servidor.
+
+Para cambiar la clave: `python3 tools/generar_huella.py usuario clave` y pegar la línea resultante en `auth.js` (misma clave en todas las herramientas si quieres una sola entrada: la sesión es por navegador y sitio).
